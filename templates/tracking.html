@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shipment Tracking</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<h2>Order Status</h2>
+<div class="track-box">
+    <h3>ORDER TRACKING For: {{data.client}}</h3>
+    <p>Status: {{ data.status }} | {{ data.order_id }}</p>
+
+    <div class="progress-container">
+        {% set stages = [
+            "Received",
+            "Hold",
+            "Booked",
+            "Applied",
+            "Shipped"
+        ] %}
+
+        {% set current_idx = stages.index(data.status) if data.status in stages else -1 %}
+
+        {% for stage in stages %}
+            {% set idx = loop.index0 %}
+
+            <div class="step-group">
+                <div class="circle {% if idx <= current_idx %}done{% endif %}"></div>
+                <div class="label">{{ stage }}</div>
+            </div>
+
+            {% if not loop.last %}
+                <div class="line {% if idx < current_idx %}done{% endif %}"></div>
+            {% endif %}
+        {% endfor %}
+        
+    </div>
+</div>
+
+</body>
+</html>
