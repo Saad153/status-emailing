@@ -1,11 +1,14 @@
-from flask import Flask, jsonify
+from flask import Flask, render_template
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine.url import URL
 
 app = Flask(__name__)
 
+
+from sqlalchemy.engine.url import URL
+
 url = URL.create(
-    drivername="cockroachdb+psycopg2",
+    drivername="cockroachdb",
     username="bilal",
     password="EZxkc0CLbQOwinppgIjPqg",
     host="odyesseydb-5950.7s5.aws-ap-south-1.cockroachlabs.cloud",
@@ -20,9 +23,14 @@ engine = create_engine(
     execution_options={"isolation_level": "AUTOCOMMIT"},
 )
 
-@app.route("/")
-def home():
-    return "✅ Status Emailing API is Live!"
+# ✅ Force CockroachDB-compatible version
+engine.dialect.server_version_info = (15, 0)
+
+# ✅ Test connection
+with engine.connect() as conn:
+    r = conn.execute(text("SELECT now()")).fetchone()
+    print("✅ Connected:", r[0])
+
 
 @app.route("/tracking/<id>")
 def order_tracking(id):
@@ -31,7 +39,7 @@ def order_tracking(id):
         result = conn.execute(query, {"jobId": id}).fetchone()
 
     if not result:
-        return jsonify({"error": f"No tracking found for Order ID {id}"}), 404
+        return f"No tracking found for Order ID {id}", 404
 
     tracking_data = {
         "order_id": result["jobNo"],
@@ -39,7 +47,8 @@ def order_tracking(id):
         "status": result["status"],
     }
 
-    return jsonify(tracking_data)
+    return render_template("tracking.html", data=tracking_data)
+
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+    app.run(debug=True)
